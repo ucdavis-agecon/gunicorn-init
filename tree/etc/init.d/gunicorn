@@ -75,7 +75,10 @@ start_one()
       echo "no configuration file defined"
       return 1
     fi
-    [ "$WORKING_DIR" ] && cd $WORKING_DIR
+    if [ -z "$WORKING_DIR" ]; then
+      echo "no working directory defined"
+      return 1
+    fi
     [ "$LOG_LEVEL" ] && args="$args --log-level=$LOG_LEVEL"
     
     if  [ "$VIRTUALENV" ]; then
@@ -88,7 +91,7 @@ start_one()
       return 1
     fi
     
-    sudo -E -u $USER $GUNICORN $args --config=$CONFIG_FILE -- $APP_MODULE
+    sudo -E -u $USER $GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE
       
     for var in $CONFIG_VARS; do
       unset $var
