@@ -47,14 +47,14 @@ start_one()
   name=$1
   args="--daemon --pid=$PID_DIR/$name.pid --log-file=$LOG_DIR/$name.log"
 
-  log_action_begin_msg "$name"
+  echo "Starting $name"
   if [ -f "$PID_DIR/$name.pid" ]; then
     pid=`cat $PID_DIR/$name.pid`
 
     if [ "$pid" ]; then
       ps $pid > /dev/null
       if [ $? = 0 ]; then
-        log_action_end_msg 0 "running already"
+        echo "running already"
         return 0
       else
         rm -f $PID_DIR/$name.pid
@@ -68,11 +68,11 @@ start_one()
     . $CONF_DIR/$name.conf
 
     if [ -z "$APP_MODULE" ]; then
-      log_action_end_msg 1 "no module name defined"
+      echo "no module name defined"
       return 1
     fi
     if [ -z "$CONFIG_FILE" ]; then
-      log_action_end_msg 1 "no configuration file defined"
+      echo "no configuration file defined"
       return 1
     fi
     [ "$WORKING_DIR" ] && cd $WORKING_DIR
@@ -84,7 +84,7 @@ start_one()
     fi
  
     if [ ! -x $GUNICORN ]; then
-      log_action_end_msg 1 "Can't find $GUNICORN"
+      echo "Can't find $GUNICORN"
       return 1
     fi
     
@@ -94,9 +94,8 @@ start_one()
       unset $var
     done
 
-    log_action_end_msg 0
   else
-    log_action_end_msg 1 "can't find config file $CONF_DIR/$name.conf"
+    echo "can't find config file $CONF_DIR/$name.conf"
   fi
 }
 
@@ -105,7 +104,7 @@ stop_one()
   local name pid
   name=$1
 
-  log_action_begin_msg "$name"
+  echo "Stopping $name"
   if [ -f "$PID_DIR/$name.pid" ]; then
     pid=`cat $PID_DIR/$name.pid`
 
@@ -114,14 +113,12 @@ stop_one()
       if [ $? = 0 ]; then
         kill -9 $pid
         if [ $? != 0 ]; then
-          log_action_end_msg 1
           return 1
         fi
       fi
     fi
     rm -f $PID_DIR/$name.pid
   fi
-  log_action_end_msg 0
 }
 
 reload_one()
@@ -129,7 +126,7 @@ reload_one()
   local name pid
   name=$1
 
-  log_action_begin_msg "$name"
+  echo "$name"
   if [ -f "$PID_DIR/$name.pid" ]; then
     pid=`cat $PID_DIR/$name.pid`
 
@@ -137,26 +134,23 @@ reload_one()
       ps $pid > /dev/null
       if [ $? = 0 ]; then
         kill -HUP $pid
-        if [ $? = 0 ]; then
-          log_action_end_msg 0
-        else
-          log_action_end_msg 1
+        if [ ! $? = 0 ]; then
           return 1
         fi
       else
-        log_action_end_msg 1 "not running"
+        echo "not running"
         rm -f $PID_DIR/$name.pid
 
         return 1
       fi
     else
-      log_action_end_msg 1 "not running"
+      echo "not running"
       rm -f $PID_DIR/$name.pid
 
       return 1
     fi
   else
-    log_action_end_msg 1 "not running or doesn't exists"
+    echo "not running or doesn't exists"
     return 1
   fi
 }
@@ -168,7 +162,7 @@ start()
     exit 1
   fi
 
-  log_daemon_msg "Starting $DESC" "$NAME"
+  echo "Starting $DESC" "$NAME"
   echo
   for n in $CONFIGS; do
     start_one $n
@@ -177,7 +171,7 @@ start()
 
 stop()
 {
-  log_daemon_msg "Stopping $DESC" "$NAME"
+  echo "Stopping $DESC" "$NAME"
   echo
   for n in $CONFIGS; do
     stop_one $n
@@ -186,7 +180,7 @@ stop()
 
 reload()
 {
-  log_daemon_msg "Reloading $DESC" "$NAME"
+  echo "Reloading $DESC" "$NAME"
   echo
   for n in $CONFIGS; do
     reload_one $n
