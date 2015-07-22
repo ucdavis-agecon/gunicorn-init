@@ -196,6 +196,23 @@ restart()
   start
 }
 
+check_status()
+{
+  # Source function library.
+  . /etc/rc.d/init.d/functions 
+
+  RETVAL=0
+  for name in $CONFIGS; do
+    status -p $PID_DIR/$name.pid $GUNICORN
+    TMP_RET=$?
+    if [ $TMP_RET -gt $RETVAL ] ; then
+      RETVAL=$TMP_RET
+    fi
+  done
+
+  return $RETVAL
+}
+
 inc()
 {
   local name pid
@@ -267,13 +284,17 @@ case "$1" in
   stop) stop;;
   reload) reload;;
   restart) restart;;
+  status)
+        check_status
+        exit $?
+        ;;
   start_one) start_one $2;;
   stop_one) stop_one $2;;
   reload_one) reload_one $2;;
   inc) inc $2;;
   dec) dec $2;;
   *)
-    echo "Usage $0 {start|stop|reload|restart|start_one <conf>|stop_one <conf>|reload_one <conf>|inc <conf>|dec <conf>}"
+    echo "Usage $0 {start|stop|reload|restart|status|start_one <conf>|stop_one <conf>|reload_one <conf>|inc <conf>|dec <conf>}"
     exit 1
     ;;
 esac
