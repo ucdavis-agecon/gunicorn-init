@@ -15,7 +15,7 @@ DESC="Python WSGI HTTP Server"
 
 SCRIPTNAME="/etc/init.d/$NAME"
 
-CONFIG_VARS="APP_MODULE CONFIG_FILE LOG_LEVEL WORKING_DIR VIRTUALENV"
+CONFIG_VARS="APP_MODULE CONFIG_FILE LOG_LEVEL WORKING_DIR VIRTUALENV SCL_PYTHON"
 
 PID_DIR="/var/run/$NAME"
 LOG_DIR="/var/log/$NAME"
@@ -91,7 +91,11 @@ start_one()
       return 1
     fi
     
-    sudo -E -u $USER $GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE
+    if [ "$SCL_PYTHON" ]; then
+      sudo -E -u $USER scl enable $SCL_PYTHON "$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE"
+    else
+      sudo -E -u $USER $GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE
+    fi
       
     for var in $CONFIG_VARS; do
       unset $var
