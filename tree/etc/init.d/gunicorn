@@ -49,63 +49,56 @@ start_one()
   local args name pid
   name=$1
   args="--daemon --pid=$PID_DIR/$name.pid --log-file=$LOG_DIR/$name.log"
+  pidfile="$PID_DIR/$name.pid"
 
-  echo "Starting $name"
-  if [ -f "$PID_DIR/$name.pid" ]; then
-    pid=`cat $PID_DIR/$name.pid`
-
-    if [ "$pid" ]; then
-      ps $pid > /dev/null
-      if [ $? = 0 ]; then
-        echo "running already"
-        return 0
-      else
-        rm -f $PID_DIR/$name.pid
-      fi
-    else
-      rm -f $PID_DIR/name.pid
-    fi
-  fi
+  echo "Starting $name: "
 
   if [ -f $CONF_DIR/$name.conf ]; then
     . $CONF_DIR/$name.conf
 
     if [ -z "$APP_MODULE" ]; then
-      echo "no module name defined"
+      echo $"no module name defined"
+      failure $"no module name defined"
       return 1
     fi
     if [ -z "$CONFIG_FILE" ]; then
-      echo "no configuration file defined"
+      echo $"no configuration file defined"
+      failure $"no configuration file defined"
       return 1
     fi
     if [ -z "$WORKING_DIR" ]; then
-      echo "no working directory defined"
+      echo $"no working directory defined"
+      failure $"no working directory defined"
       return 1
     fi
     [ "$LOG_LEVEL" ] && args="$args --log-level=$LOG_LEVEL"
-    
+
     if  [ "$VIRTUALENV" ]; then
-      . $VIRTUALENV/bin/activate 
+      . $VIRTUALENV/bin/activate
       GUNICORN=$VIRTUALENV/bin/gunicorn
     fi
- 
+
     if [ ! -x $GUNICORN ]; then
-      echo "Can't find $GUNICORN"
+      echo $"Can't find $GUNICORN"
+      failure $"Can't find $GUNICORN"
       return 1
     fi
-    
+
     if [ "$SCL_PYTHON" ]; then
-      sudo -E -u $USER scl enable $SCL_PYTHON "$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE"
+      daemon --pidfile ${pidfile} --user ${USER} scl enable $SCL_PYTHON \"$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE\"
     else
-      sudo -E -u $USER $GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE
+      daemon --pidfile ${pidfile} --user ${USER} "$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE"
     fi
-      
+    [ "$?" -eq 0 ] && success $"$name startup" || failure $"$name startup"
+
     for var in $CONFIG_VARS; do
       unset $var
     done
 
   else
-    echo "can't find config file $CONF_DIR/$name.conf"
+    echo $"can't find config file $CONF_DIR/$name.conf"
+    failure $"can't find config file $CONF_DIR/$name.conf"
+    return 1
   fi
 }
 
