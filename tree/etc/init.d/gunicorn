@@ -24,6 +24,9 @@ LOG_DIR="/var/log/$NAME"
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 . /lib/lsb/init-functions
 
+# Source function library.
+. /etc/rc.d/init.d/functions 
+
 GUNICORN="/usr/bin/gunicorn"
 
 if [ -f /etc/default/$NAME ]; then
@@ -111,21 +114,17 @@ stop_one()
   local name pid
   name=$1
 
-  echo "Stopping $name"
-  if [ -f "$PID_DIR/$name.pid" ]; then
-    pid=`cat $PID_DIR/$name.pid`
+  echo -n "Stopping $name: "
+  pidfile="$PID_DIR/$name.pid"
 
-    if [ "$pid" ]; then
-      ps $pid > /dev/null
-      if [ $? = 0 ]; then
-        kill -9 $pid
-        if [ $? != 0 ]; then
-          return 1
-        fi
-      fi
-    fi
-    rm -f $PID_DIR/$name.pid
+  if  [ "$VIRTUALENV" ]; then
+    . $VIRTUALENV/bin/activate
+    GUNICORN=$VIRTUALENV/bin/gunicorn
   fi
+
+  killproc -p ${pidfile} -d 10 $GUNICORN
+  RETVAL=$?
+  echo
 }
 
 reload_one()
@@ -202,8 +201,6 @@ restart()
 
 check_status()
 {
-  # Source function library.
-  . /etc/rc.d/init.d/functions 
 
   RETVAL=0
   for name in $CONFIGS; do
