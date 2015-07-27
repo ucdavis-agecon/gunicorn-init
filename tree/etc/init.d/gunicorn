@@ -51,7 +51,7 @@ start_one()
   args="--daemon --pid=$PID_DIR/$name.pid --log-file=$LOG_DIR/$name.log"
   pidfile="$PID_DIR/$name.pid"
 
-  echo "Starting $name: "
+  echo -n "Starting $name: "
 
   if [ -f $CONF_DIR/$name.conf ]; then
     . $CONF_DIR/$name.conf
@@ -90,6 +90,7 @@ start_one()
       daemon --pidfile ${pidfile} --user ${USER} "$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE"
     fi
     [ "$?" -eq 0 ] && success $"$name startup" || failure $"$name startup"
+    echo
 
     for var in $CONFIG_VARS; do
       unset $var
