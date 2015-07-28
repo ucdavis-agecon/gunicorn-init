@@ -119,6 +119,7 @@ stop_one()
   killproc -p ${pidfile} -d 10 $GUNICORN
   RETVAL=$?
   echo
+  [ $RETVAL = 0 ] && rm -f ${pidfile}
 }
 
 reload_one()
