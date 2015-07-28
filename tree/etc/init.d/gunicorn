@@ -198,7 +198,7 @@ check_status()
 
   RETVAL=0
   for name in $CONFIGS; do
-    status -p $PID_DIR/$name.pid $GUNICORN
+    status -p $PID_DIR/$name.pid $name
     TMP_RET=$?
     if [ $TMP_RET -gt $RETVAL ] ; then
       RETVAL=$TMP_RET
