@@ -127,33 +127,17 @@ reload_one()
   local name pid
   name=$1
 
-  echo "$name"
-  if [ -f "$PID_DIR/$name.pid" ]; then
-    pid=`cat $PID_DIR/$name.pid`
+  echo -n "Reloading $name: "
+  pidfile="$PID_DIR/$name.pid"
 
-    if [ "$pid" ]; then
-      ps $pid > /dev/null
-      if [ $? = 0 ]; then
-        kill -HUP $pid
-        if [ ! $? = 0 ]; then
-          return 1
-        fi
-      else
-        echo "not running"
-        rm -f $PID_DIR/$name.pid
-
-        return 1
-      fi
-    else
-      echo "not running"
-      rm -f $PID_DIR/$name.pid
-
-      return 1
-    fi
-  else
-    echo "not running or doesn't exists"
-    return 1
+  if  [ "$VIRTUALENV" ]; then
+    . $VIRTUALENV/bin/activate
+    GUNICORN=$VIRTUALENV/bin/gunicorn
   fi
+
+  killproc -p ${pidfile} $GUNICORN -HUP
+  RETVAL=$?
+  echo
 }
 
 start()
