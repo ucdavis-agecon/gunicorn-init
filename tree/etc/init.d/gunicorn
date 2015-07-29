@@ -15,7 +15,7 @@ DESC="Python WSGI HTTP Server"
 
 SCRIPTNAME="/etc/init.d/$NAME"
 
-CONFIG_VARS="APP_MODULE CONFIG_FILE LOG_LEVEL WORKING_DIR VIRTUALENV SCL_PYTHON"
+CONFIG_VARS="APP_MODULE LOG_LEVEL WORKING_DIR VIRTUALENV BIND USER GROUP WORKERS SCL_PYTHON"
 
 PID_DIR="/var/run/$NAME"
 LOG_DIR="/var/log/$NAME"
@@ -33,13 +33,9 @@ if [ -f /etc/default/$NAME ]; then
   . /etc/default/$NAME
 fi
 
-USER=`whoami`
-[ "$RUN_USER" ] && USER=$RUN_USER
-
  
 if [ ! -d $PID_DIR ]; then
   mkdir $PID_DIR
-  chown $USER $PID_DIR
 fi
 
 [ -x $GUNICORN ] || [ "$USE_VIRTUALENVS" = "yes" ] || log_failure_msg "Can't find $GUNICORN"
@@ -61,14 +57,29 @@ start_one()
       failure $"no module name defined"
       return 1
     fi
-    if [ -z "$CONFIG_FILE" ]; then
-      echo $"no configuration file defined"
-      failure $"no configuration file defined"
-      return 1
-    fi
     if [ -z "$WORKING_DIR" ]; then
       echo $"no working directory defined"
       failure $"no working directory defined"
+      return 1
+    fi
+    if [ -z "$BIND" ]; then
+      echo $"no bind parameter defined"
+      failure $"no bind parameter defined"
+      return 1
+    fi
+    if [ -z "$USER" ]; then
+      echo $"no user parameter defined"
+      failure $"no user parameter defined"
+      return 1
+    fi
+    if [ -z "$GROUP" ]; then
+      echo $"no group parameter defined"
+      failure $"no group parameter defined"
+      return 1
+    fi
+    if [ -z "$WORKERS" ]; then
+      echo $"no workers parameters defined"
+      failure $"no workers parameters defined"
       return 1
     fi
     [ "$LOG_LEVEL" ] && args="$args --log-level=$LOG_LEVEL"
@@ -85,9 +96,9 @@ start_one()
     fi
 
     if [ "$SCL_PYTHON" ]; then
-      daemon --pidfile ${pidfile} --user ${USER} scl enable $SCL_PYTHON \"$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE\"
+      daemon --pidfile ${pidfile} scl enable $SCL_PYTHON \"$GUNICORN $args --chdir=$WORKING_DIR --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS -- $APP_MODULE\"
     else
-      daemon --pidfile ${pidfile} --user ${USER} "$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE -- $APP_MODULE"
+      daemon --pidfile ${pidfile} "$GUNICORN $args --chdir=$WORKING_DIR --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS -- $APP_MODULE"
     fi
     [ "$?" -eq 0 ] && success $"$name startup" || failure $"$name startup"
     echo
