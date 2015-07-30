@@ -96,9 +96,9 @@ start_one()
     fi
 
     if [ "$SCL_PYTHON" ]; then
-      daemon --pidfile ${pidfile} scl enable $SCL_PYTHON \"$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE --env DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS -- $APP_MODULE\"
+      daemon --pidfile ${pidfile} scl enable $SCL_PYTHON \"$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE --env DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS --name=$name -- $APP_MODULE\"
     else
-      daemon --pidfile ${pidfile} "$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE --env DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS -- $APP_MODULE"
+      daemon --pidfile ${pidfile} "$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE --env DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS --name=$name -- $APP_MODULE"
     fi
     [ "$?" -eq 0 ] && success $"$name startup" || failure $"$name startup"
     echo
