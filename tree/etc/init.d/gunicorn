@@ -185,8 +185,12 @@ reload()
 
 restart()
 {
-  stop
-  start
+  echo "Restarting $DESC" "$NAME"
+  for n in $CONFIGS; do
+    echo
+    stop_one $n
+    start_one $n
+  done
 }
 
 check_status()
