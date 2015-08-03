@@ -130,7 +130,7 @@ stop_one()
   killproc -p ${pidfile} -d 10 $GUNICORN
   RETVAL=$?
   echo
-  [ $RETVAL = 0 ] && rm -f ${pidfile}
+  [ $RETVAL = 0 ] && [ -e ${pidfile} ] && rm -f ${pidfile}
 }
 
 reload_one()
@@ -229,7 +229,7 @@ inc()
         fi
       else
         log_failure_msg "'$name' is not running"
-        rm -f $PID_DIR/$name.pid
+        [ -e $PID_DIR/$name.pid ] && rm -f $PID_DIR/$name.pid
 
         exit 1
       fi
@@ -261,7 +261,7 @@ dec()
         fi
       else
         log_failure_msg "'$name' is not running"
-        rm -f $PID_DIR/$name.pid
+        [ -e $PID_DIR/$name.pid ] && rm -f $PID_DIR/$name.pid
 
         exit 1
       fi
