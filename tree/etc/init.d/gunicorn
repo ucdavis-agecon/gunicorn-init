@@ -2,8 +2,8 @@
 
 ### BEGIN INIT INFO
 # Provides:          gunicorn
-# Required-Start:    $local_fs $remote_fs $network $syslog
-# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Required-Start:    network postgresql
+# Required-Stop:     network postgresql httpd
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Python WSGI HTTP server
