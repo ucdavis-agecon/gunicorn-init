@@ -15,7 +15,7 @@ DESC="Python WSGI HTTP Server"
 
 SCRIPTNAME="/etc/init.d/$NAME"
 
-CONFIG_VARS="APP_MODULE CONFIG_FILE DJANGO_SETTINGS_MODULE LOG_LEVEL WORKING_DIR VIRTUALENV BIND USER GROUP WORKERS SCL_PYTHON"
+CONFIG_VARS="APP_MODULE CONFIG_FILE DJANGO_SETTINGS_MODULE LOG_LEVEL WORKING_DIR VIRTUALENV BIND USER GROUP WORKERS TIMEOUT SCL_PYTHON"
 
 PID_DIR="/var/run/$NAME"
 LOG_DIR="/var/log/$NAME"
@@ -82,6 +82,11 @@ start_one()
       failure $"no workers parameters defined"
       return 1
     fi
+    if [ -z "$TIMEOUT" ]; then
+      echo $"no timeout parameter defined"
+      failure $"no timeout parameter defined"
+      return 1
+    fi
     [ "$LOG_LEVEL" ] && args="$args --log-level=$LOG_LEVEL"
 
     if  [ "$VIRTUALENV" ]; then
@@ -96,9 +101,9 @@ start_one()
     fi
 
     if [ "$SCL_PYTHON" ]; then
-      daemon --pidfile ${pidfile} scl enable $SCL_PYTHON \"$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE --env DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS --name=$name -- $APP_MODULE\"
+      daemon --pidfile ${pidfile} scl enable $SCL_PYTHON \"$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE --env DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS --timeout=$TIMEOUT --name=$name -- $APP_MODULE\"
     else
-      daemon --pidfile ${pidfile} "$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE --env DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS --name=$name -- $APP_MODULE"
+      daemon --pidfile ${pidfile} "$GUNICORN $args --chdir=$WORKING_DIR --config=$CONFIG_FILE --env DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE --bind=$BIND --user=$USER --group=$GROUP --workers=$WORKERS --timeout=$TIMEOUT --name=$name -- $APP_MODULE"
     fi
     [ "$?" -eq 0 ] && success $"$name startup" || failure $"$name startup"
     echo
